@@ -7,30 +7,31 @@ const TextViewer = ({ url }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    const loadContent = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Convert GitHub blob URLs to raw URLs
+        let processedUrl = url;
+        if (url.includes('github.com') && url.includes('/blob/')) {
+          processedUrl = url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
+        }
+
+        const response = await fetch(processedUrl);
+        if (!response.ok) throw new Error('Failed to load content');
+        const text = await response.text();
+        setContent(text);
+      } catch (err) {
+        console.error('Error loading text:', err);
+        setError('Failed to load content');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadContent();
   }, [url]);
-
-  const loadContent = async () => {
-    try {
-      setLoading(true);
-      
-      // Convert GitHub blob URLs to raw URLs
-      let processedUrl = url;
-      if (url.includes('github.com') && url.includes('/blob/')) {
-        processedUrl = url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
-      }
-      
-      const response = await fetch(processedUrl);
-      if (!response.ok) throw new Error('Failed to load content');
-      const text = await response.text();
-      setContent(text);
-      setLoading(false);
-    } catch (err) {
-      console.error('Error loading text:', err);
-      setError('Failed to load content');
-      setLoading(false);
-    }
-  };
 
   const formatContent = (text) => {
     let html = text;

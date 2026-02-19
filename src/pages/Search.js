@@ -17,7 +17,18 @@ const Search = () => {
   }, []);
 
   useEffect(() => {
-    filterCourses();
+    if (!searchQuery.trim()) {
+      setFilteredCourses([]);
+      return;
+    }
+
+    const query = searchQuery.toLowerCase();
+    const filtered = allCourses.filter(course => 
+      course.title?.toLowerCase().includes(query) ||
+      course.description?.toLowerCase().includes(query) ||
+      course.category?.toLowerCase().includes(query)
+    );
+    setFilteredCourses(filtered);
   }, [searchQuery, allCourses]);
 
   const loadCourses = async () => {
@@ -33,21 +44,6 @@ const Search = () => {
       console.error('Error loading courses:', error);
       setLoading(false);
     }
-  };
-
-  const filterCourses = () => {
-    if (!searchQuery.trim()) {
-      setFilteredCourses([]);
-      return;
-    }
-
-    const query = searchQuery.toLowerCase();
-    const filtered = allCourses.filter(course => 
-      course.title?.toLowerCase().includes(query) ||
-      course.description?.toLowerCase().includes(query) ||
-      course.category?.toLowerCase().includes(query)
-    );
-    setFilteredCourses(filtered);
   };
 
   const handleCourseClick = (course) => {

@@ -18,7 +18,11 @@ const AllCourses = () => {
   }, []);
 
   useEffect(() => {
-    filterCourses();
+    if (selectedCategory === 'all') {
+      setFilteredCourses(allCourses);
+      return;
+    }
+    setFilteredCourses(allCourses.filter(c => c.category === selectedCategory));
   }, [selectedCategory, allCourses]);
 
   const loadData = async () => {
@@ -46,14 +50,6 @@ const AllCourses = () => {
     } catch (error) {
       console.error('Error loading data:', error);
       setLoading(false);
-    }
-  };
-
-  const filterCourses = () => {
-    if (selectedCategory === 'all') {
-      setFilteredCourses(allCourses);
-    } else {
-      setFilteredCourses(allCourses.filter(c => c.category === selectedCategory));
     }
   };
 

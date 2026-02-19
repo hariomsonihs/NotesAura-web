@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { auth, db } from '../firebase/config';
-import { collection, query, where, getDocs, doc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, deleteDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import './Notifications.css';
 
@@ -10,54 +10,54 @@ const Notifications = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadNotifications();
-  }, []);
+    const loadNotifications = async () => {
+      const user = auth.currentUser;
+      if (!user) {
+        navigate('/login');
+        return;
+      }
 
-  const loadNotifications = async () => {
-    const user = auth.currentUser;
-    if (!user) {
-      navigate('/login');
-      return;
-    }
+      try {
+        let notificationsData = [];
 
-    try {
-      let notificationsData = [];
-      
-      // Try user-specific notifications
-      const userNotifRef = collection(db, 'users', user.uid, 'notifications');
-      const userSnapshot = await getDocs(userNotifRef);
-      
-      if (!userSnapshot.empty) {
-        notificationsData = userSnapshot.docs.map(doc => ({
+        // Try user-specific notifications
+        const userNotifRef = collection(db, 'users', user.uid, 'notifications');
+        const userSnapshot = await getDocs(userNotifRef);
+
+        if (!userSnapshot.empty) {
+          notificationsData = userSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+        }
+
+        // Also load general notifications
+        const generalNotifRef = collection(db, 'notifications');
+        const generalSnapshot = await getDocs(generalNotifRef);
+
+        const generalNotifs = generalSnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         }));
+
+        // Combine and sort
+        notificationsData = [...notificationsData, ...generalNotifs].sort((a, b) => {
+          const timeA = a.timestamp?.toMillis?.() || a.createdAt?.toMillis?.() || 0;
+          const timeB = b.timestamp?.toMillis?.() || b.createdAt?.toMillis?.() || 0;
+          return timeB - timeA;
+        });
+
+        console.log('Loaded notifications:', notificationsData);
+        setNotifications(notificationsData);
+      } catch (error) {
+        console.error('Error loading notifications:', error);
+      } finally {
+        setLoading(false);
       }
-      
-      // Also load general notifications
-      const generalNotifRef = collection(db, 'notifications');
-      const generalSnapshot = await getDocs(generalNotifRef);
-      
-      const generalNotifs = generalSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      
-      // Combine and sort
-      notificationsData = [...notificationsData, ...generalNotifs].sort((a, b) => {
-        const timeA = a.timestamp?.toMillis?.() || a.createdAt?.toMillis?.() || 0;
-        const timeB = b.timestamp?.toMillis?.() || b.createdAt?.toMillis?.() || 0;
-        return timeB - timeA;
-      });
-      
-      console.log('Loaded notifications:', notificationsData);
-      setNotifications(notificationsData);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error loading notifications:', error);
-      setLoading(false);
-    }
-  };
+    };
+
+    loadNotifications();
+  }, [navigate]);
 
   const formatDate = (timestamp) => {
     if (!timestamp) return 'Just now';

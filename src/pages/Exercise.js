@@ -15,33 +15,10 @@ const Exercise = () => {
   const [isCompleted, setIsCompleted] = useState(false);
 
   useEffect(() => {
-    loadExercise();
-  }, [courseId, exerciseId]);
+    const checkCompletion = async () => {
+      const user = auth.currentUser;
+      if (!user) return;
 
-  const loadExercise = async () => {
-    try {
-      const courseDoc = await getDoc(doc(db, 'courses', courseId));
-      if (courseDoc.exists()) {
-        const courseData = { id: courseDoc.id, ...courseDoc.data() };
-        setCourse(courseData);
-
-        const ex = courseData.exercises?.find(e => e.id === exerciseId);
-        if (ex) {
-          setExercise(ex);
-          detectContentType(ex.contentPath);
-          await checkCompletion();
-        }
-      }
-      setLoading(false);
-    } catch (error) {
-      console.error('Error loading exercise:', error);
-      setLoading(false);
-    }
-  };
-
-  const checkCompletion = async () => {
-    const user = auth.currentUser;
-    if (user) {
       try {
         const enrollDoc = await getDoc(
           doc(db, 'users', user.uid, 'enrolledCourses', courseId)
@@ -54,42 +31,64 @@ const Exercise = () => {
       } catch (error) {
         console.error('Error checking completion:', error);
       }
-    }
-  };
+    };
 
-  const detectContentType = (url) => {
-    if (!url) {
-      setContentType('none');
-      return;
-    }
-
-    // Convert GitHub blob URLs to raw URLs
-    let processedUrl = url;
-    if (url.includes('github.com') && url.includes('/blob/')) {
-      processedUrl = url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
-      // Update exercise with corrected URL
-      if (exercise) {
-        exercise.contentPath = processedUrl;
+    const detectContentType = (url) => {
+      if (!url) {
+        return { processedUrl: '', type: 'none' };
       }
-    }
 
-    // Check for PDF
-    if (processedUrl.includes('drive.google.com') || 
-        processedUrl.includes('dropbox.com') || 
-        processedUrl.toLowerCase().endsWith('.pdf')) {
-      setContentType('pdf');
-    }
-    // Check for text/markdown
-    else if (processedUrl.includes('raw.githubusercontent.com') || 
-             processedUrl.toLowerCase().endsWith('.txt') || 
-             processedUrl.toLowerCase().endsWith('.md')) {
-      setContentType('text');
-    }
-    // Default to web page
-    else {
-      setContentType('web');
-    }
-  };
+      // Convert GitHub blob URLs to raw URLs
+      let processedUrl = url;
+      if (url.includes('github.com') && url.includes('/blob/')) {
+        processedUrl = url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
+      }
+
+      if (
+        processedUrl.includes('drive.google.com') ||
+        processedUrl.includes('dropbox.com') ||
+        processedUrl.toLowerCase().endsWith('.pdf')
+      ) {
+        return { processedUrl, type: 'pdf' };
+      }
+
+      if (
+        processedUrl.includes('raw.githubusercontent.com') ||
+        processedUrl.toLowerCase().endsWith('.txt') ||
+        processedUrl.toLowerCase().endsWith('.md')
+      ) {
+        return { processedUrl, type: 'text' };
+      }
+
+      return { processedUrl, type: 'web' };
+    };
+
+    const loadExercise = async () => {
+      try {
+        const courseDoc = await getDoc(doc(db, 'courses', courseId));
+        if (courseDoc.exists()) {
+          const courseData = { id: courseDoc.id, ...courseDoc.data() };
+          setCourse(courseData);
+
+          const ex = courseData.exercises?.find(e => e.id === exerciseId);
+          if (ex) {
+            const { processedUrl, type } = detectContentType(ex.contentPath);
+            setExercise({ ...ex, contentPath: processedUrl });
+            setContentType(type);
+            await checkCompletion();
+          } else {
+            setContentType('none');
+          }
+        }
+      } catch (error) {
+        console.error('Error loading exercise:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadExercise();
+  }, [courseId, exerciseId]);
 
   const getPdfUrl = (url) => {
     // Google Drive PDF

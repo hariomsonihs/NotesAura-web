@@ -13,36 +13,36 @@ const CategoryCourses = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const loadCategoryAndCourses = async () => {
+      try {
+        setLoading(true);
+
+        // Load category details
+        const categoryDoc = await getDoc(doc(db, 'categories', categoryId));
+        if (categoryDoc.exists()) {
+          setCategory({ id: categoryDoc.id, ...categoryDoc.data() });
+        }
+
+        // Load courses for this category
+        const coursesRef = collection(db, 'courses');
+        const q = query(coursesRef, where('category', '==', categoryId));
+        const snapshot = await getDocs(q);
+
+        const coursesData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })).sort((a, b) => (a.categoryOrder || 0) - (b.categoryOrder || 0));
+
+        setCourses(coursesData);
+      } catch (error) {
+        console.error('Error loading category courses:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadCategoryAndCourses();
   }, [categoryId]);
-
-  const loadCategoryAndCourses = async () => {
-    try {
-      setLoading(true);
-
-      // Load category details
-      const categoryDoc = await getDoc(doc(db, 'categories', categoryId));
-      if (categoryDoc.exists()) {
-        setCategory({ id: categoryDoc.id, ...categoryDoc.data() });
-      }
-
-      // Load courses for this category
-      const coursesRef = collection(db, 'courses');
-      const q = query(coursesRef, where('category', '==', categoryId));
-      const snapshot = await getDocs(q);
-      
-      const coursesData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })).sort((a, b) => (a.categoryOrder || 0) - (b.categoryOrder || 0));
-
-      setCourses(coursesData);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error loading category courses:', error);
-      setLoading(false);
-    }
-  };
 
   const handleCourseClick = (course) => {
     navigate(`/course/${course.id}`);

@@ -10,7 +10,6 @@ const Profile = () => {
   const [user, setUser] = useState(null);
   const [userData, setUserData] = useState(null);
   const [enrolledCourses, setEnrolledCourses] = useState([]);
-  const [quizProgress, setQuizProgress] = useState([]);
   const [loading, setLoading] = useState(true);
   const [completedQuizzes, setCompletedQuizzes] = useState(0);
 
@@ -81,7 +80,6 @@ const Profile = () => {
       const q = query(quizRef, where('userId', '==', userId));
       const snapshot = await getDocs(q);
       const quizzes = snapshot.docs.map(doc => doc.data());
-      setQuizProgress(quizzes);
       const completed = quizzes.filter(q => q.isCompleted).length;
       setCompletedQuizzes(completed);
     } catch (error) {
@@ -104,13 +102,6 @@ const Profile = () => {
     return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
   };
 
-  const getGrade = (percentage) => {
-    if (percentage >= 90) return { text: 'Excellent! 🎉', color: '#10b981' };
-    if (percentage >= 75) return { text: 'Very Good! 👍', color: '#3b82f6' };
-    if (percentage >= 60) return { text: 'Good! 😊', color: '#f59e0b' };
-    if (percentage >= 40) return { text: 'Fair 📚', color: '#f97316' };
-    return { text: 'Need Practice 💪', color: '#ef4444' };
-  };
 
   return (
     <div className="profile-page">

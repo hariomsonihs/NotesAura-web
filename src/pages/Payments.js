@@ -10,55 +10,55 @@ const Payments = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadPayments();
-  }, []);
-
-  const loadPayments = async () => {
-    const user = auth.currentUser;
-    if (!user) {
-      navigate('/login');
-      return;
-    }
-
-    try {
-      // Try multiple possible collection structures
-      let paymentsData = [];
-      
-      // Try 1: payments collection with userId field
-      const paymentsRef = collection(db, 'payments');
-      const q = query(paymentsRef, where('userId', '==', user.uid));
-      const snapshot = await getDocs(q);
-      
-      if (!snapshot.empty) {
-        paymentsData = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-      } else {
-        // Try 2: user_payments subcollection
-        const userPaymentsRef = collection(db, 'users', user.uid, 'payments');
-        const snapshot2 = await getDocs(userPaymentsRef);
-        paymentsData = snapshot2.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
+    const loadPayments = async () => {
+      const user = auth.currentUser;
+      if (!user) {
+        navigate('/login');
+        return;
       }
-      
-      // Sort by timestamp
-      paymentsData.sort((a, b) => {
-        const timeA = a.timestamp?.toMillis?.() || a.createdAt?.toMillis?.() || a.paymentDate?.toMillis?.() || 0;
-        const timeB = b.timestamp?.toMillis?.() || b.createdAt?.toMillis?.() || b.paymentDate?.toMillis?.() || 0;
-        return timeB - timeA;
-      });
-      
-      console.log('Loaded payments:', paymentsData);
-      setPayments(paymentsData);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error loading payments:', error);
-      setLoading(false);
-    }
-  };
+
+      try {
+        // Try multiple possible collection structures
+        let paymentsData = [];
+
+        // Try 1: payments collection with userId field
+        const paymentsRef = collection(db, 'payments');
+        const q = query(paymentsRef, where('userId', '==', user.uid));
+        const snapshot = await getDocs(q);
+
+        if (!snapshot.empty) {
+          paymentsData = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+        } else {
+          // Try 2: user_payments subcollection
+          const userPaymentsRef = collection(db, 'users', user.uid, 'payments');
+          const snapshot2 = await getDocs(userPaymentsRef);
+          paymentsData = snapshot2.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+        }
+
+        // Sort by timestamp
+        paymentsData.sort((a, b) => {
+          const timeA = a.timestamp?.toMillis?.() || a.createdAt?.toMillis?.() || a.paymentDate?.toMillis?.() || 0;
+          const timeB = b.timestamp?.toMillis?.() || b.createdAt?.toMillis?.() || b.paymentDate?.toMillis?.() || 0;
+          return timeB - timeA;
+        });
+
+        console.log('Loaded payments:', paymentsData);
+        setPayments(paymentsData);
+      } catch (error) {
+        console.error('Error loading payments:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPayments();
+  }, [navigate]);
 
   const formatDate = (timestamp) => {
     if (!timestamp) return 'N/A';

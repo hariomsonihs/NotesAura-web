@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db, auth } from '../firebase/config';
-import { doc, getDoc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import './CourseDetail.css';
 
 const CourseDetail = () => {
@@ -14,41 +14,38 @@ const CourseDetail = () => {
   const [completedExercises, setCompletedExercises] = useState([]);
 
   useEffect(() => {
-    loadCourse();
-  }, [courseId]);
-
-  const loadCourse = async () => {
-    try {
-      const courseDoc = await getDoc(doc(db, 'courses', courseId));
-      if (courseDoc.exists()) {
-        const courseData = { id: courseDoc.id, ...courseDoc.data() };
-        setCourse(courseData);
-        checkEnrollment();
-      }
-      setLoading(false);
-    } catch (error) {
-      console.error('Error loading course:', error);
-      setLoading(false);
-    }
-  };
-
-  const checkEnrollment = async () => {
-    const user = auth.currentUser;
-    if (user) {
+    const loadCourse = async () => {
       try {
-        const enrollDoc = await getDoc(
-          doc(db, 'users', user.uid, 'enrolledCourses', courseId)
-        );
-        if (enrollDoc.exists()) {
-          setEnrolled(true);
-          const data = enrollDoc.data();
-          setCompletedExercises(data.completedExercises || []);
+        const courseDoc = await getDoc(doc(db, 'courses', courseId));
+        if (courseDoc.exists()) {
+          const courseData = { id: courseDoc.id, ...courseDoc.data() };
+          setCourse(courseData);
+
+          const user = auth.currentUser;
+          if (user) {
+            try {
+              const enrollDoc = await getDoc(
+                doc(db, 'users', user.uid, 'enrolledCourses', courseId)
+              );
+              if (enrollDoc.exists()) {
+                setEnrolled(true);
+                const data = enrollDoc.data();
+                setCompletedExercises(data.completedExercises || []);
+              }
+            } catch (error) {
+              console.error('Error checking enrollment:', error);
+            }
+          }
         }
       } catch (error) {
-        console.error('Error checking enrollment:', error);
+        console.error('Error loading course:', error);
+      } finally {
+        setLoading(false);
       }
-    }
-  };
+    };
+
+    loadCourse();
+  }, [courseId]);
 
   const handleEnroll = async () => {
     const user = auth.currentUser;
