@@ -13,6 +13,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  min-width: 0;
 }
 
 .navbar-left {
@@ -20,6 +21,7 @@
   align-items: center;
   gap: 12px;
   flex: 1;
+  min-width: 0;
 }
 
 .navbar-logo-img {
@@ -42,6 +44,9 @@
   margin: 0;
   cursor: pointer;
   transition: transform 0.3s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .navbar-title:hover {
@@ -77,6 +82,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-shrink: 0;
 }
 
 .icon-btn {
@@ -198,16 +204,63 @@
 }
 
 @media (max-width: 768px) {
+  .navbar {
+    padding: 10px 0;
+  }
+
+  .navbar-container {
+    padding: 0 12px;
+    gap: 8px;
+  }
+
+  .navbar-left {
+    gap: 8px;
+  }
+
+  .navbar-right {
+    gap: 6px;
+  }
+
+  .menu-btn,
+  .icon-btn {
+    width: 34px;
+    height: 34px;
+    font-size: 16px;
+  }
+
   .navbar-logo-img {
     width: 36px;
     height: 36px;
   }
   
   .navbar-title {
-    font-size: 18px;
+    font-size: 16px;
+    max-width: 96px;
+  }
+
+  .btn-login {
+    padding: 8px 12px;
+    font-size: 13px;
+    line-height: 1;
+    white-space: nowrap;
   }
   
   .drawer-content {
     width: 260px;
+  }
+}
+
+@media (max-width: 420px) {
+  .navbar-container {
+    padding: 0 10px;
+  }
+
+  .navbar-title {
+    display: none;
+  }
+
+  .btn-login {
+    padding: 7px 10px;
+    font-size: 12px;
   }
 }
