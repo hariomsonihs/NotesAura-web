@@ -45,45 +45,17 @@ function AppContent() {
 
   return (
     <div className="App">
-      {user && <Navbar />}
+      <Navbar />
       
       <Routes>
         <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
-        <Route path="/" element={
-          <ProtectedRoute>
-            <Home />
-          </ProtectedRoute>
-        } />
-        <Route path="/categories" element={
-          <ProtectedRoute>
-            <Categories />
-          </ProtectedRoute>
-        } />
-        <Route path="/categories/:categoryId" element={
-          <ProtectedRoute>
-            <CategoryCourses />
-          </ProtectedRoute>
-        } />
-        <Route path="/courses" element={
-          <ProtectedRoute>
-            <AllCourses />
-          </ProtectedRoute>
-        } />
-        <Route path="/search" element={
-          <ProtectedRoute>
-            <Search />
-          </ProtectedRoute>
-        } />
-        <Route path="/course/:courseId" element={
-          <ProtectedRoute>
-            <CourseDetail />
-          </ProtectedRoute>
-        } />
-        <Route path="/exercise/:courseId/:exerciseId" element={
-          <ProtectedRoute>
-            <Exercise />
-          </ProtectedRoute>
-        } />
+        <Route path="/" element={<Home />} />
+        <Route path="/categories" element={<Categories />} />
+        <Route path="/categories/:categoryId" element={<CategoryCourses />} />
+        <Route path="/courses" element={<AllCourses />} />
+        <Route path="/search" element={<Search />} />
+        <Route path="/course/:courseId" element={<CourseDetail />} />
+        <Route path="/exercise/:courseId/:exerciseId" element={<Exercise />} />
         <Route path="/profile" element={
           <ProtectedRoute>
             <Profile />
@@ -102,12 +74,8 @@ function AppContent() {
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
 
-      {user && (
-        <>
-          {!hideBottomNav && <BottomNav />}
-          {showChatBot && <ChatBot />}
-        </>
-      )}
+      {!hideBottomNav && <BottomNav />}
+      {showChatBot && <ChatBot />}
     </div>
   );
 }
